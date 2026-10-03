@@ -2,16 +2,18 @@ import sys
 from pypdf import PdfReader
 
 
-def extract_text(pdf) -> str:
-    """Read a PDF (a file path or an in-memory file) and return its text, labelled by page."""
+def extract_pages(pdf) -> list[str]:
+    """Return a list with the text of each page (index 0 = page 1)."""
     reader = PdfReader(pdf)
-    pages = []
+    return [page.extract_text() or "" for page in reader.pages]
 
-    for page_number, page in enumerate(reader.pages, start=1):
-        text = page.extract_text() or ""
-        pages.append(f"--- Page {page_number} ---\n{text}")
 
-    return "\n\n".join(pages)
+def extract_text(pdf) -> str:
+    """Return all text in one string, labelled by page."""
+    pages = extract_pages(pdf)
+    return "\n\n".join(
+        f"--- Page {number} ---\n{text}" for number, text in enumerate(pages, start=1)
+    )
 
 
 if __name__ == "__main__":
