@@ -2,9 +2,9 @@ import sys
 from pypdf import PdfReader
 
 
-def extract_text(pdf_path: str) -> str:
-    """Read a PDF and return all its text, labelled by page."""
-    reader = PdfReader(pdf_path)
+def extract_text(pdf) -> str:
+    """Read a PDF (a file path or an in-memory file) and return its text, labelled by page."""
+    reader = PdfReader(pdf)
     pages = []
 
     for page_number, page in enumerate(reader.pages, start=1):
