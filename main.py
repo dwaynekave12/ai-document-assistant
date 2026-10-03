@@ -2,6 +2,8 @@ import uuid
 from contextlib import asynccontextmanager
 from io import BytesIO
 
+from fastapi.middleware.cors import CORSMiddleware
+
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
@@ -21,6 +23,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="AI Document Assistant", lifespan=lifespan)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class UploadResponse(BaseModel):
     document_id: str
