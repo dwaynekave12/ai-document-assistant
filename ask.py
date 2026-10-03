@@ -29,8 +29,8 @@ def ask(document_text: str, question: str) -> str:
             }
         ],
     )
-    return response.content[0].text
-
+    # The response is a list of blocks (e.g. thinking, then text); keep only the text
+    return "".join(block.text for block in response.content if block.type == "text")
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
