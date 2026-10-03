@@ -1,20 +1,25 @@
 import uuid
+from contextlib import asynccontextmanager
 from io import BytesIO
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from chunker import chunk_pages
+from db import DatabaseRetriever, document_exists, init_db, save_document
 from extract import extract_pages
 from rag import answer_question
-from retriever import Retriever
-
-app = FastAPI(title="AI Document Assistant")
 
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
-# In-memory store: document_id -> Retriever. Everything is lost when the server restarts.
-documents: dict[str, Retriever] = {}
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()  # make sure the tables exist when the server starts
+    yield
+
+
+app = FastAPI(title="AI Document Assistant", lifespan=lifespan)
 
 
 class UploadResponse(BaseModel):
@@ -45,7 +50,7 @@ def health():
 
 @app.post("/documents", response_model=UploadResponse)
 def upload_document(file: UploadFile = File(...)):
-    """Upload a PDF. It's chunked and embedded once, ready for questions."""
+    """Upload a PDF. It's chunked, embedded and saved to the database."""
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Please upload a PDF file.")
 
@@ -61,11 +66,10 @@ def upload_document(file: UploadFile = File(...)):
             detail="No text found in this PDF. It may be a scanned image.",
         )
 
-    document_id = str(uuid.uuid4())
-    documents[document_id] = Retriever(chunks)
+    document_id = save_document(file.filename, len(pages), chunks)
 
     return UploadResponse(
-        document_id=document_id,
+        document_id=str(document_id),
         filename=file.filename,
         pages=len(pages),
         chunks=len(chunks),
@@ -73,12 +77,12 @@ def upload_document(file: UploadFile = File(...)):
 
 
 @app.post("/documents/{document_id}/ask", response_model=AnswerResponse)
-def ask_question(document_id: str, request: QuestionRequest):
+def ask_question(document_id: uuid.UUID, request: QuestionRequest):
     """Ask a question about a previously uploaded document."""
-    retriever = documents.get(document_id)
-    if retriever is None:
+    if not document_exists(document_id):
         raise HTTPException(status_code=404, detail="Document not found.")
 
+    retriever = DatabaseRetriever(document_id)
     answer, results = answer_question(retriever, request.question)
     sources = [Source(page=chunk.page, score=round(score, 3)) for chunk, score in results]
 
