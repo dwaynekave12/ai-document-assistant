@@ -1,21 +1,28 @@
-import { useEffect, useState } from "react";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { useState } from "react";
+import Chat from "./components/Chat";
+import UploadForm from "./components/UploadForm";
+import "./App.css";
 
 function App() {
-  const [status, setStatus] = useState("checking...");
-
-  useEffect(() => {
-    fetch(`${API_URL}/health`)
-      .then((response) => response.json())
-      .then((data) => setStatus(data.status))
-      .catch(() => setStatus("cannot reach backend"));
-  }, []);
+  const [document, setDocument] = useState(null);
 
   return (
-    <main>
+    <main className="app">
       <h1>AI Document Assistant</h1>
-      <p>Backend status: {status}</p>
+
+      {document ? (
+        <>
+          <div className="document-bar">
+            <span>
+              Asking about <strong>{document.filename}</strong> ({document.pages} pages)
+            </span>
+            <button onClick={() => setDocument(null)}>Upload a different PDF</button>
+          </div>
+          <Chat document={document} />
+        </>
+      ) : (
+        <UploadForm onUploaded={setDocument} />
+      )}
     </main>
   );
 }
