@@ -99,3 +99,59 @@ button:disabled {
   border-radius: 8px;
   font-size: 1rem;
 }
+
+.home {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.document-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+.document-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eaeef2;
+}
+
+.document-list li:last-child {
+  border-bottom: none;
+}
+
+.link-button {
+  background: none;
+  color: #2f6feb;
+  padding: 0;
+  font-weight: 600;
+  text-align: left;
+}
+
+.link-button:hover {
+  text-decoration: underline;
+}
+
+.meta {
+  color: #656d76;
+  font-size: 0.85rem;
+  flex: 1;
+}
+
+.delete-button {
+  background: none;
+  color: #cf222e;
+  border: 1px solid #cf222e;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+}
+
+.delete-button:hover {
+  background: #cf222e;
+  color: white;
+}

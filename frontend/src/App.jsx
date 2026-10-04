@@ -2,6 +2,7 @@ import { useState } from "react";
 import Chat from "./components/Chat";
 import UploadForm from "./components/UploadForm";
 import "./App.css";
+import DocumentList from "./components/DocumentList";
 
 function App() {
   const [document, setDocument] = useState(null);
@@ -20,8 +21,11 @@ function App() {
           </div>
           <Chat document={document} />
         </>
-      ) : (
-        <UploadForm onUploaded={setDocument} />
+            ) : (
+        <div className="home">
+          <UploadForm onUploaded={setDocument} />
+          <DocumentList onSelect={setDocument} />
+        </div>
       )}
     </main>
   );

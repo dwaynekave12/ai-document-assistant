@@ -92,3 +92,22 @@ class DatabaseRetriever:
             ).fetchall()
 
         return [(Chunk(text=text, page=page), float(score)) for page, text, score in rows]
+
+def list_documents() -> list[dict]:
+    """Return every document, newest first."""
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT id, filename, page_count, created_at FROM documents ORDER BY created_at DESC"
+        ).fetchall()
+
+    return [
+        {"document_id": str(doc_id), "filename": filename, "pages": pages, "created_at": created_at}
+        for doc_id, filename, pages, created_at in rows
+    ]
+
+
+def delete_document(document_id: uuid.UUID) -> bool:
+    """Delete a document (its chunks go too, via ON DELETE CASCADE). Returns False if not found."""
+    with get_connection() as conn:
+        result = conn.execute("DELETE FROM documents WHERE id = %s", (document_id,))
+    return result.rowcount > 0

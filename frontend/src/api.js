@@ -29,3 +29,15 @@ export async function askQuestion(documentId, question) {
   });
   return handleResponse(response);
 }
+
+export async function listDocuments() {
+  const response = await fetch(`${API_URL}/documents`);
+  return handleResponse(response);
+}
+
+export async function deleteDocument(documentId) {
+  const response = await fetch(`${API_URL}/documents/${documentId}`, {
+    method: "DELETE",
+  });
+  return handleResponse(response);
+}

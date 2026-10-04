@@ -54,3 +54,38 @@ def test_ask_returns_answer_and_sources(monkeypatch):
         "answer": "Fake answer",
         "sources": [{"page": 3, "score": 0.912}],
     }
+
+def test_list_documents(monkeypatch):
+    monkeypatch.setattr(
+        main,
+        "list_documents",
+        lambda: [
+            {
+                "document_id": "abc",
+                "filename": "notes.pdf",
+                "pages": 51,
+                "created_at": "2026-10-04T00:00:00Z",
+            }
+        ],
+    )
+
+    response = client.get("/documents")
+
+    assert response.status_code == 200
+    assert response.json()[0]["filename"] == "notes.pdf"
+
+
+def test_delete_document_returns_204(monkeypatch):
+    monkeypatch.setattr(main, "delete_document", lambda document_id: True)
+
+    response = client.delete(f"/documents/{uuid.uuid4()}")
+
+    assert response.status_code == 204
+
+
+def test_delete_unknown_document_returns_404(monkeypatch):
+    monkeypatch.setattr(main, "delete_document", lambda document_id: False)
+
+    response = client.delete(f"/documents/{uuid.uuid4()}")
+
+    assert response.status_code == 404

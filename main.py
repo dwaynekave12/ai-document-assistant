@@ -1,14 +1,22 @@
 import uuid
 from contextlib import asynccontextmanager
 from io import BytesIO
-
+from datetime import datetime
 from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from chunker import chunk_pages
-from db import DatabaseRetriever, document_exists, init_db, save_document
+from db import (
+    DatabaseRetriever,
+    delete_document,
+    document_exists,
+    init_db,
+    list_documents,
+    save_document,
+)
+
 from extract import extract_pages
 from rag import answer_question
 
@@ -36,6 +44,11 @@ class UploadResponse(BaseModel):
     pages: int
     chunks: int
 
+class DocumentSummary(BaseModel):
+    document_id: str
+    filename: str
+    pages: int
+    created_at: datetime
 
 class QuestionRequest(BaseModel):
     question: str
@@ -95,3 +108,15 @@ def ask_question(document_id: uuid.UUID, request: QuestionRequest):
     sources = [Source(page=chunk.page, score=round(score, 3)) for chunk, score in results]
 
     return AnswerResponse(answer=answer, sources=sources)
+
+@app.get("/documents", response_model=list[DocumentSummary])
+def get_documents():
+    """List all uploaded documents, newest first."""
+    return list_documents()
+
+
+@app.delete("/documents/{document_id}", status_code=204)
+def remove_document(document_id: uuid.UUID):
+    """Delete a document and all its chunks."""
+    if not delete_document(document_id):
+        raise HTTPException(status_code=404, detail="Document not found.")
